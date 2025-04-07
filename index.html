@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokédex - Gen 1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      @font-face {
+        font-family: 'LucideIcons';
+        /* Updated URL to jsdelivr as unpkg sometimes has issues */
+        src: url(https://cdn.jsdelivr.net/npm/lucide-static@latest/font/Lucide.ttf) format('truetype');
+      }
+      body {
+        font-family: 'Inter', sans-serif;
+        /* Default light mode background */
+        background-color: #f3f4f6; /* Tailwind gray-100 */
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+      .lucide {
+        font-family: 'LucideIcons';
+        font-size: 1.25rem; /* Adjust size as needed */
+        line-height: 1;
+        vertical-align: middle;
+        display: inline-block; /* Ensure proper alignment */
+        width: 1em; /* Consistent sizing */
+        height: 1em;
+      }
+      /* Simple fade-in animation for cards */
+      .pokemon-card {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeIn 0.5s ease-out forwards;
+        transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+         /* Light mode card defaults */
+        background-color: white;
+        border: 1px solid #e5e7eb; /* gray-200 */
+      }
+      .pokemon-card:hover {
+        transform: translateY(-5px) scale(1.03);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Tailwind shadow-lg */
+      }
+      @keyframes fadeIn {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      /* Style scrollbar */
+       ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1; /* Light track */
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #888; /* Light thumb */
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #555; /* Light thumb hover */
+      }
+      /* Type Colors (remain vibrant) */
+      .type-normal { background-color: #A8A77A; color: white; }
+      .type-fire { background-color: #EE8130; color: white; }
+      .type-water { background-color: #6390F0; color: white; }
+      .type-electric { background-color: #F7D02C; color: #333; }
+      .type-grass { background-color: #7AC74C; color: white; }
+      .type-ice { background-color: #96D9D6; color: #333; }
+      .type-fighting { background-color: #C22E28; color: white; }
+      .type-poison { background-color: #A33EA1; color: white; }
+      .type-ground { background-color: #E2BF65; color: #333; }
+      .type-flying { background-color: #A98FF3; color: white; }
+      .type-psychic { background-color: #F95587; color: white; }
+      .type-bug { background-color: #A6B91A; color: white; }
+      .type-rock { background-color: #B6A136; color: white; }
+      .type-ghost { background-color: #735797; color: white; }
+      .type-dragon { background-color: #6F35FC; color: white; }
+      .type-dark { background-color: #705746; color: white; }
+      .type-steel { background-color: #B7B7CE; color: #333; }
+      .type-fairy { background-color: #D685AD; color: white; }
+
+      /* Loading Spinner */
+      .loader {
+        border: 5px solid #f3f4f6; /* Light grey */
+        border-top: 5px solid #3498db; /* Blue */
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 50px auto;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      /* --- Custom Dark Mode Styles --- */
+      .dark body {
+        background-color: #111827; /* gray-900 */
+        color: #d1d5db; /* gray-300 */
+      }
+      .dark .pokemon-card {
+        background-color: #1f2937; /* gray-800 */
+        border-color: #4b5563; /* gray-600 */
+      }
+       .dark .pokemon-card:hover {
+         box-shadow: 0 10px 15px -3px rgba(255, 255, 255, 0.07), 0 4px 6px -2px rgba(255, 255, 255, 0.04);
+       }
+      .dark ::-webkit-scrollbar-track {
+        background: #374151; /* gray-700 */
+      }
+      .dark ::-webkit-scrollbar-thumb {
+        background: #6b7280; /* gray-500 */
+      }
+      .dark ::-webkit-scrollbar-thumb:hover {
+        background: #4b5563; /* gray-600 */
+      }
+       .dark .loader {
+         border-color: #374151; /* gray-700 */
+         border-top-color: #60a5fa; /* blue-400 */
+       }
+       /* Header */
+       .dark header h1 { color: #ef4444; } /* red-500 */
+       .dark header p { color: #d1d5db; } /* gray-300 */
+       /* Filter Section */
+       .dark .filter-container { /* Added class to target this div */
+           background-color: #1f2937; /* gray-800 */
+       }
+       .dark #searchInput {
+           background-color: #374151; /* gray-700 */
+           border-color: #4b5563; /* gray-600 */
+           color: #f3f4f6; /* gray-100 */
+       }
+        .dark #searchInput::placeholder {
+            color: #9ca3af; /* gray-400 */
+        }
+        .dark #searchInput + span { /* Search icon */
+            color: #9ca3af; /* gray-400 */
+        }
+        .dark label[for="legendaryFilter"] {
+             color: #d1d5db; /* gray-300 */
+        }
+        .dark #legendaryFilter {
+            background-color: #4b5563; /* gray-600 */
+            border-color: #6b7280; /* gray-500 */
+        }
+        .dark .filter-container h3 { /* Filter by type heading */
+            color: #e5e7eb; /* gray-200 */
+        }
+        /* Type filter buttons */
+        .dark .type-filter-btn.active[data-type="all"] {
+            background-color: #4b5563; /* gray-600 */
+            color: #f3f4f6; /* gray-100 */
+        }
+         .dark .type-filter-btn:not([data-type="all"]):hover {
+             opacity: 0.85;
+         }
+         /* Active ring color */
+         .dark .type-filter-btn.active {
+             --tw-ring-color: #f87171; /* red-400 */
+         }
+         .dark .type-filter-btn {
+             --tw-ring-offset-color: #1f2937; /* gray-800 */
+         }
+
+        /* Card Content */
+        .dark .pokemon-card p.text-gray-500 { color: #9ca3af; } /* gray-400 - ID */
+        .dark .pokemon-card h2 { color: #f3f4f6; } /* gray-100 - Name */
+        .dark .pokemon-card span[title="Legendary/Mythical"] { color: #facc15; } /* yellow-400 */
+        .dark .pokemon-card .text-gray-600 { color: #d1d5db; } /* gray-300 - Stats text */
+        .dark .pokemon-card .border-gray-200 { border-color: #4b5563; } /* gray-600 - Stats separator */
+
+        /* Loading/Error Messages */
+        .dark #loading p { color: #9ca3af; } /* gray-400 */
+        .dark #error-message {
+            background-color: rgba(239, 68, 68, 0.2); /* red-500 with alpha */
+            color: #fca5a5; /* red-300 */
+        }
+        .dark #pokedexGrid p { /* No results message */
+             color: #9ca3af; /* gray-400 */
+        }
+
+        /* Theme Toggle Button */
+        .dark #theme-toggle {
+            color: #9ca3af; /* gray-400 */
+        }
+        .dark #theme-toggle:hover {
+             background-color: #374151; /* gray-700 */
+        }
+         .dark #theme-toggle:focus {
+             --tw-ring-color: #4b5563; /* gray-600 */
+         }
+
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8"> <header class="text-center mb-8 relative">
+        <h1 class="text-4xl md:text-5xl font-bold text-red-600 mb-2">Pokédex</h1>
+        <p class="text-lg text-gray-700">Generation 1 Pokémon (1-151)</p>
+        <button id="theme-toggle" type="button" class="absolute top-0 right-0 mt-2 mr-2 md:mt-0 md:mr-0 text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-gray-200 rounded-lg text-sm p-2.5 transition-colors duration-200">
+            <span id="theme-toggle-dark-icon" class="lucide lucide-moon hidden"></span>
+            <span id="theme-toggle-light-icon" class="lucide lucide-sun hidden"></span>
+        </button>
+    </header>
+
+    <div class="filter-container mb-8 p-4 bg-white rounded-lg shadow-md transition-colors duration-300">
+        <div class="flex flex-wrap gap-4 items-center justify-center mb-4">
+            <div class="relative flex-grow max-w-xs">
+                 <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <span class="lucide lucide-search"></span>
+                 </span>
+                <input type="text" id="searchInput" placeholder="Search by name or ID..."
+                       class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition">
+            </div>
+            <div class="flex items-center space-x-2">
+                <input type="checkbox" id="legendaryFilter" class="form-checkbox h-5 w-5 text-red-600 rounded focus:ring-red-500 border-gray-300">
+                <label for="legendaryFilter" class="text-gray-700 font-medium">Show Only Legendaries</label>
+            </div>
+        </div>
+        <div class="mb-4">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3 text-center">Filter by Type:</h3>
+            <div id="typeFilters" class="flex flex-wrap justify-center gap-2">
+                 <button data-type="all" class="type-filter-btn active px-4 py-1.5 bg-gray-700 text-white rounded-full text-sm font-medium shadow hover:bg-gray-800 transition ring-2 ring-offset-2 ring-offset-white">All</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading" class="text-center py-10">
+        <div class="loader"></div>
+        <p class="text-gray-600 mt-4">Catching Pokémon data...</p>
+    </div>
+
+    <div id="error-message" class="hidden text-center text-red-600 bg-red-100 p-4 rounded-lg mb-8"></div>
+
+    <div id="pokedexGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+        </div>
+
+    <script>
+        const pokedexGrid = document.getElementById('pokedexGrid');
+        const searchInput = document.getElementById('searchInput');
+        const typeFiltersContainer = document.getElementById('typeFilters');
+        const legendaryFilter = document.getElementById('legendaryFilter');
+        const loadingIndicator = document.getElementById('loading');
+        const errorMessageDiv = document.getElementById('error-message');
+        // Theme toggle elements
+        const themeToggleButton = document.getElementById('theme-toggle');
+        const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+        const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+
+
+        const POKEMON_COUNT = 151; // Generation 1
+        const POKEAPI_URL = 'https://pokeapi.co/api/v2/';
+        let allPokemonData = []; // To store fetched data
+        let currentFilter = {
+            type: 'all',
+            legendary: false,
+            search: ''
+        };
+
+        // --- Theme Handling ---
+
+        // Function to apply the theme (adds/removes 'dark' class)
+        const applyTheme = (theme) => {
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                themeToggleLightIcon.classList.add('hidden');
+                themeToggleDarkIcon.classList.remove('hidden');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeToggleDarkIcon.classList.add('hidden');
+                themeToggleLightIcon.classList.remove('hidden');
+                localStorage.setItem('theme', 'light');
+            }
+            // Update ring offset color for type filters based on theme
+             updateTypeFilterRingOffset();
+        };
+
+        // Function to toggle the theme
+        const toggleTheme = () => {
+            const currentTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+            applyTheme(currentTheme);
+        };
+
+        // Initialize theme on load
+        const initializeTheme = () => {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            // Apply saved theme or system preference, default to light
+            applyTheme(savedTheme || (prefersDark ? 'dark' : 'light'));
+        };
+
+         // Helper to update ring offset for type filters dynamically
+        const updateTypeFilterRingOffset = () => {
+             const isDarkMode = document.documentElement.classList.contains('dark');
+             document.querySelectorAll('.type-filter-btn').forEach(btn => {
+                 if (isDarkMode) {
+                     btn.classList.remove('ring-offset-white');
+                     // Tailwind doesn't have dark:ring-offset-gray-800 with CDN, handled via CSS variable
+                 } else {
+                     btn.classList.add('ring-offset-white');
+                 }
+             });
+        }
+
+        // Add event listener for the theme toggle button
+        if (themeToggleButton) { // Check if button exists
+             themeToggleButton.addEventListener('click', toggleTheme);
+        } else {
+             console.error("Theme toggle button not found!");
+        }
+
+        // --- Utility Functions ---
+
+        function capitalize(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+        function formatId(id) {
+            return `#${id.toString().padStart(3, '0')}`;
+        }
+        function formatDimension(value, unit) {
+            if (unit === 'm') return (value / 10).toFixed(1) + ' m';
+            if (unit === 'kg') return (value / 10).toFixed(1) + ' kg';
+            return value;
+        }
+        function showLoading() {
+            loadingIndicator.style.display = 'block';
+            pokedexGrid.style.display = 'none';
+            errorMessageDiv.classList.add('hidden');
+        }
+        function hideLoading() {
+            loadingIndicator.style.display = 'none';
+            pokedexGrid.style.display = 'grid';
+        }
+        function showError(message) {
+             hideLoading();
+             pokedexGrid.innerHTML = '';
+             errorMessageDiv.textContent = `Error: ${message}`;
+             errorMessageDiv.classList.remove('hidden');
+        }
+
+        // --- API Fetching ---
+
+        async function fetchPokemonDetails(id) {
+            try {
+                const [pokemonRes, speciesRes] = await Promise.all([
+                    fetch(`${POKEAPI_URL}pokemon/${id}`),
+                    fetch(`${POKEAPI_URL}pokemon-species/${id}`)
+                ]);
+                if (!pokemonRes.ok || !speciesRes.ok) {
+                     let errorMsg = `Failed for Pokémon ${id}.`;
+                     if (!pokemonRes.ok) errorMsg += ` Pokemon status: ${pokemonRes.status}.`;
+                     if (!speciesRes.ok) errorMsg += ` Species status: ${speciesRes.status}.`;
+                    throw new Error(errorMsg);
+                }
+                const pokemonData = await pokemonRes.json();
+                const speciesData = await speciesRes.json();
+                return {
+                    id: pokemonData.id,
+                    name: capitalize(pokemonData.name),
+                    sprite: pokemonData.sprites.front_default || `https://placehold.co/96x96/e2e8f0/cbd5e0?text=No+Image`,
+                    types: pokemonData.types.map(t => t.type.name),
+                    stats: {
+                        hp: pokemonData.stats.find(s => s.stat.name === 'hp')?.base_stat || 'N/A',
+                        attack: pokemonData.stats.find(s => s.stat.name === 'attack')?.base_stat || 'N/A',
+                        defense: pokemonData.stats.find(s => s.stat.name === 'defense')?.base_stat || 'N/A',
+                    },
+                    height: pokemonData.height,
+                    weight: pokemonData.weight,
+                    isLegendary: speciesData.is_legendary || speciesData.is_mythical
+                };
+            } catch (error) {
+                console.error(`Error fetching details for Pokémon ${id}:`, error);
+                return null; // Indicate failure for this Pokémon
+            }
+        }
+
+        async function fetchAllPokemon() {
+            showLoading();
+            allPokemonData = [];
+            const promises = Array.from({ length: POKEMON_COUNT }, (_, i) => fetchPokemonDetails(i + 1));
+
+            try {
+                const results = await Promise.all(promises);
+                allPokemonData = results.filter(pokemon => pokemon !== null); // Filter out failures
+
+                if (allPokemonData.length === 0 && POKEMON_COUNT > 0) {
+                     throw new Error("Failed to fetch any Pokémon data. Check API status or network.");
+                } else if (allPokemonData.length < POKEMON_COUNT) {
+                     console.warn(`Could only fetch ${allPokemonData.length}/${POKEMON_COUNT} Pokémon.`);
+                     // Optionally show a non-blocking warning to user
+                }
+
+                populateTypeFilters();
+                displayPokemon(allPokemonData); // Initial display
+            } catch (error) {
+                console.error("Error fetching all Pokémon data:", error);
+                showError(error.message || "Could not load Pokémon data.");
+            } finally {
+                 hideLoading();
+            }
+        }
+
+        // --- Display Logic ---
+
+        function createPokemonCard(pokemon) {
+            const card = document.createElement('div');
+            // Base classes, dark mode handled by CSS rules via .dark selector
+            card.className = 'pokemon-card rounded-lg shadow-md p-4 text-center flex flex-col justify-between';
+            card.style.animationDelay = `${(pokemon.id % 10) * 0.05}s`;
+
+            const typeBadges = pokemon.types.map(type =>
+                // Added hover transition to badges
+                `<span class="type-badge type-${type} px-2.5 py-0.5 rounded-full text-xs font-semibold mr-1 mb-1 inline-block transition hover:opacity-80">${capitalize(type)}</span>`
+            ).join('');
+
+            // Text color classes are now handled by CSS .dark rules
+            card.innerHTML = `
+                <div>
+                    <img src="${pokemon.sprite}" alt="${pokemon.name}" class="mx-auto h-24 w-24 mb-2 object-contain" onerror="this.src='https://placehold.co/96x96/e2e8f0/cbd5e0?text=No+Image'; this.onerror=null;">
+                    <p class="text-sm font-medium text-gray-500">${formatId(pokemon.id)}</p>
+                    <h2 class="text-xl font-bold text-gray-800 mb-2">${pokemon.name} ${pokemon.isLegendary ? '<span title="Legendary/Mythical" class="text-yellow-500">★</span>' : ''}</h2>
+                    <div class="mb-3">${typeBadges}</div>
+                </div>
+                <div class="text-left text-sm text-gray-600 space-y-1 mt-auto pt-3 border-t border-gray-200">
+                    <p><span class="font-semibold w-16 inline-block">HP:</span> ${pokemon.stats.hp}</p>
+                    <p><span class="font-semibold w-16 inline-block">Attack:</span> ${pokemon.stats.attack}</p>
+                    <p><span class="font-semibold w-16 inline-block">Defense:</span> ${pokemon.stats.defense}</p>
+                    <p><span class="font-semibold w-16 inline-block">Height:</span> ${formatDimension(pokemon.height, 'm')}</p>
+                    <p><span class="font-semibold w-16 inline-block">Weight:</span> ${formatDimension(pokemon.weight, 'kg')}</p>
+                </div>
+            `;
+            return card;
+        }
+
+        function displayPokemon(pokemonList) {
+            pokedexGrid.innerHTML = ''; // Clear previous results
+            const searchLower = currentFilter.search.toLowerCase();
+            const filteredList = pokemonList.filter(pokemon => {
+                const matchesSearch = pokemon.name.toLowerCase().includes(searchLower) || pokemon.id.toString().includes(searchLower);
+                const matchesType = currentFilter.type === 'all' || pokemon.types.includes(currentFilter.type);
+                const matchesLegendary = !currentFilter.legendary || pokemon.isLegendary;
+                return matchesSearch && matchesType && matchesLegendary;
+            });
+
+            if (filteredList.length === 0) {
+                // Text color handled by CSS .dark rule
+                pokedexGrid.innerHTML = '<p class="text-center text-gray-500 col-span-full">No Pokémon match the current filters.</p>';
+            } else {
+                filteredList.sort((a, b) => a.id - b.id).forEach(pokemon => {
+                    pokedexGrid.appendChild(createPokemonCard(pokemon));
+                });
+            }
+            hideLoading(); // Ensure loading is hidden
+            errorMessageDiv.classList.add('hidden'); // Hide any previous error
+        }
+
+        // --- Filtering Logic ---
+
+        function populateTypeFilters() {
+            const types = new Set(allPokemonData.flatMap(p => p.types));
+            const allButtonHtml = `
+                <button data-type="all" class="type-filter-btn active px-4 py-1.5 bg-gray-700 text-white rounded-full text-sm font-medium shadow hover:bg-gray-800 transition ring-2 ring-offset-2 ring-offset-white">All</button>
+            `;
+            typeFiltersContainer.innerHTML = allButtonHtml; // Start with 'All' button
+
+            Array.from(types).sort().forEach(type => {
+                 const button = document.createElement('button');
+                 button.dataset.type = type;
+                 button.textContent = capitalize(type);
+                 // Base classes + type color + ring offset for light mode
+                 button.className = `type-filter-btn type-${type} px-4 py-1.5 rounded-full text-sm font-medium shadow hover:opacity-80 transition ring-offset-2 ring-offset-white`;
+                 typeFiltersContainer.appendChild(button);
+            });
+            addTypeFilterListeners(); // Add listeners to all buttons
+            updateTypeFilterRingOffset(); // Set initial ring offset based on theme
+        }
+
+        function addTypeFilterListeners() {
+            document.querySelectorAll('.type-filter-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    // Visually reset all buttons first
+                    document.querySelectorAll('.type-filter-btn').forEach(btn => {
+                        btn.classList.remove('active', 'ring-2', 'ring-red-500', 'bg-gray-700', 'text-white');
+                        // Re-apply type class if it's not the 'all' button and lost it
+                         if (btn.dataset.type !== 'all' && !btn.classList.contains(`type-${btn.dataset.type}`)) {
+                            btn.classList.add(`type-${btn.dataset.type}`);
+                         }
+                    });
+
+                    // Apply active state styles to the clicked button
+                    button.classList.add('active', 'ring-2', 'ring-red-500'); // Ring color handled by CSS .dark rule
+
+                     // Special styling for the 'All' button when active
+                    if (button.dataset.type === 'all') {
+                        button.classList.add('bg-gray-700', 'text-white');
+                    } else {
+                        // Ensure non-'All' active buttons don't have the gray background
+                        button.classList.remove('bg-gray-700', 'text-white');
+                         // Ensure type class is present
+                         if (!button.classList.contains(`type-${button.dataset.type}`)) {
+                            button.classList.add(`type-${button.dataset.type}`);
+                         }
+                    }
+
+                    // Update filter state and redisplay
+                    currentFilter.type = button.dataset.type;
+                    displayPokemon(allPokemonData);
+                });
+            });
+        }
+
+        // --- Event Listeners ---
+
+        searchInput.addEventListener('input', (e) => {
+            currentFilter.search = e.target.value.trim(); // Trim whitespace
+            displayPokemon(allPokemonData);
+        });
+        legendaryFilter.addEventListener('change', (e) => {
+            currentFilter.legendary = e.target.checked;
+            displayPokemon(allPokemonData);
+        });
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeTheme(); // Set theme based on preference/system
+            fetchAllPokemon(); // Fetch Pokémon data
+        });
+
+    </script>
+</body>
+</html>
